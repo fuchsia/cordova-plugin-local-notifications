@@ -91,7 +91,7 @@ A notification does have a set of configurable properties.
 | attachments   |         |     |                           |
 | autoClear     |         |     |                           |
 | badge         |         |     |                           |
-| channel       |         | -   | Channel-ID of the channel (see: createChannel). In the future it will be renamed to channelId |
+| channelId       |       x | -   | <img src="images/android-icon.svg" width="16"> Android only. Set the `channelId` for the notification to be posted on. See [Android Notification Channels](#android-notification-channels) for more information. |
 | clock         |         |     |                           |
 | color         |         |     |                           |
 | data          |         |     |                           |
@@ -107,19 +107,19 @@ A notification does have a set of configurable properties.
 | lockscreen    |         |     |                           |
 | mediaSession  |         |     |                           |
 | number        |         |     |                           |
-| onlyAlertOnce | x       | -   | Android only. Set this flag if you would only like the sound, vibrate and ticker to be played if the notification is not already showing (see [documentation](https://developer.android.com/reference/android/app/Notification.Builder#setOnlyAlertOnce(boolean))). |
+| onlyAlertOnce | x       | -   | <img src="images/android-icon.svg" width="16"> Android only. Set this flag if you would only like the sound, vibrate and ticker to be played if the notification is not already showing (see [documentation](https://developer.android.com/reference/android/app/Notification.Builder#setOnlyAlertOnce(boolean))). |
 | priority      |         |     |                           |
 | progressBar   | x       | -   | Natively not supported by iOS, [see Stackoverflow](https://stackoverflow.com/questions/48500532/progress-view-in-local-notification/48500734#48500734) |
 | silent        |         |     |                           |
 | smallIcon     |         |     |                           |
-| sound         | (x)     | (x) | Property available but not useable. In Android it may work up to Android 7.1. Since Android 8 it must be set with createChannel. In iOS it would be possible, but must be implemented too. |
+| sound         | (x)     | (x) | On Android, it sets the sound file until Android 7.1. Since Android 8 it must be set by a channel. In iOS it would be possible, but it is not implemented. |
 | sticky        |         |     |                           |
 | summary       |         |     |                           |
 | text          | x       | x   | Text of the notification. For Android exists some special features: 1. It can be a JSONArray to [summarize](#summarizing) notifications. [NotificationCompat.MessagingStyle](https://developer.android.com/reference/androidx/core/app/NotificationCompat.MessagingStyle) will then be used. Using an JSONArray for iOS would result in a crash. 2. If the text contains line breaks (`\n`) the notification style [NotificationCompat.InboxStyle](https://developer.android.com/reference/androidx/core/app/NotificationCompat.InboxStyle) would be used. 3. If the text is longer then 44 chars, the notifications style [NotificationCompat.BigTextStyle](https://developer.android.com/reference/androidx/core/app/NotificationCompat.BigTextStyle) will be used. |
 | timeoutAfter  |         |     |                           |
 | title         |         |     |                           |
 | trigger       |         |     |                           |
-| vibrate       | (x)     |     | <img src="images/android-icon.svg" width="16"> Android only. Since Android 8 it must be set with channel. |
+| vibrate       | (x)     |    -| <img src="images/android-icon.svg" width="16"> Android only. Since Android 8 it must be set with a channel. |
 | wakeup        |         |     |                           |
 
 For their default values see:
@@ -513,37 +513,88 @@ cordova.plugins.notification.local.fireQueuedEvents();
 All methods work asynchronous and accept callback methods.
 See the sample app for how to use them.
 
-| Method   | Method            | Method          | Method         | Method        | Method           |
-| :------- | :---------------- | :-------------- | :------------- | :------------ | :--------------- |
-| schedule | cancelAll         | isTriggered     | get            | removeActions | un               |
-| update   | hasPermission     | getType         | getAll         | hasActions    | fireQueuedEvents |
-| clear    | requestPermission | getIds          | getScheduled   | getDefaults   | createChannel    |
-| clearAll | isPresent         | getScheduledIds | getTriggered   | setDefaults   | canScheduleExactAlarms|
-| cancel   | isScheduled       | getTriggeredIds | addActions     | on            |
+| Method                         | Android | iOS | Comment                   |
+| :------------------------------| :-------| :-- | :------------------------ |
+| addActions                     |         |     |                           |
+| cancel                         | x       | x   |                           |
+| cancelAll                      | x       | x   |                           |
+| canScheduleExactAlarms         | x       | -   | Android only. Checks if exact alarms are permitted. Since Android 13 inexact alarms are permitted by default. |
+| clear                          | x       | x   | On Android, it clears a already posted notification from the statusbar. |
+| clearAll                       | x       | x   |                           |
+| createChannel                  | x       | -   | Android only. Creates a channel for Android to post notifications on. |
+| fireQueuedEvents               |         |     |                           |
+| get                            |         |     |                           |
+| getAll                         |         |     |                           |
+| getDefaults                    |         |     |                           |
+| getIds                         |         |     |                           |
+| getScheduled                   |         |     |                           |
+| getScheduledIds                |         |     |                           |
+| getTriggered                   |         |     |                           |
+| getTriggeredIds                |         |     |                           |
+| getType                        |         |     |                           |
+| hasActions                     |         |     |                           |
+| hasPermission                  |         |     |                           |
+| isPresent                      |         |     |                           |
+| isScheduled                    |         |     |                           |
+| isTriggered                    |         |     |                           |
+| on                             |         |     |                           |
+| openAlarmSettings              | x       | -   | Android only. Supported since Android 12. Opens the "Alarms & Reminders"-settings, where the user can manually enable exact alarms. |
+| openNotificationSettings       | x       | (x) | Opens the notifications settings since Android 8. On iOS it opens the app settings. |
+| removeActions                  |         |     |                           |
+| requestPermission              |         |     |                           |
+| schedule                       |         |     |                           |
+| setDefaults                    |         |     |                           |
+| un                             |         |     |                           |
+| update                         |         |     |                           |
 
+### Android exact/inexact Alarms
+Since Android 13 notifications will be scheduled inexact by default. The user must grant exact alarm permissions manually in the "Alarms & Reminders"-setting by [openAlarmSettings](#openalarmsettings), if exact alarms are required.
 
+#### openAlarmSettings
+Opens the "Alarms & Reminders"-settings as an Activity when running on Android 12 (SDK 31) or later, where the user can enable exact alarms. On Android older then 12, it will just call the `successCallback`, without doing anything. This method will not wait for the user to be returned back to the app. For this, the `resume`-event can be used. The callback will just return `OK`, after starting the activity.
+- If the user grants permission, already inexact scheduled notifications will automatically be rescheduled as exact alarms, but only if the app is still available in background.
+- If exact alarms were already granted and the user revokes it, the app will be killed and all scheduled notifications will be canceld. The app have to schedule the notifications as inexact alarms again, when the app is opened the next time, see https://developer.android.com/develop/background-work/services/alarms/schedule#using-schedule-exact-permission.
+
+#### canScheduleExactAlarms
+Checks if the user has enabled the "Alarms & Reminders"-setting. If not, the notificiatons will be scheduled inexact, which is still ok and will only be delayed by some minutes.
+- On Android 12 the permission is granted by default
+- On Android 13 and newer, the permission is not granted by default and have to be explicitly enabled by the user.
+- On Android 11 and older, this method will always return `true` in the `successCallback`.
+
+#### openNotificationSettings
+Opens the notifications settings of the app on Android 8 and newer. This method will not wait for the user to be returned back to the app. For this, the `resume`-event can be used.
+- On Android, the callback will just return "OK", after starting the activity.
+- On Android older then 8, it opens the app details.
+- On iOS it's not possible to open the notification settings, it will open the app settings.
 
 ## Android Notification Channels
+Since Android 8 notification channels must be created to post noitifications. The settings for the vibration, sound and importance is set by a channel and not by a notification. A channel is not changeable, after it is created. This is a restriction by Android.
 
-On Android 8 and above a Notification Channel is required and is the only way to set a non-default sound, vibration or importance. 
+### Default Channel
+A default channel will always be created by this plugin and has the following settings:
+- ID: `default-channel-id`
+- Name: `Default channel`
+- [IMPORTANCE_DEFAULT](https://developer.android.com/reference/android/app/NotificationManager#IMPORTANCE_DEFAULT)
 
-A default channel is automatically created with [IMPORTANCE_DEFAULT](https://developer.android.com/reference/android/app/NotificationManager#IMPORTANCE_DEFAULT), the id `default-channel-id` and the name `Default channel`. (The name is not translatable.) Any notification that doesn't specify a `channel` will use this default channel with default sound and vibration settings.
+The values of the default channel are not configurable at this point. Any notification that doesn't specify a `channelId` property will use this default channel with default sound and vibration settings.
 
-To customize vibration, sound, or importance, create a channel as follows: 
+The creation of a channel is done as follows: 
 
 ```js
 cordova.plugins.notification.local.createChannel({
-    channelId:'my_ch_id', // string
+    channelId:'my_ch_id', // string - To separate something in the id, use "_" instead of "-"
     channelName:'My Channel Name', // string 
     description:"Description of channel", // string (optional)
     sound: 'file://audio/ring.mp3', // string (optional) 
-    vibrate: true, // bool (optional)
-    importance: 3, // int (optional) 0 to 4 
-    soundUsage: 5, // int (optional) 
-  }, success_callback)
+    vibrate: true, // bool (optional), default is false
+    importance: 3, // int (optional) 0 to 4, default is IMPORTANCE_DEFAULT (3)
+    soundUsage: 5, // int (optional), default is USAGE_NOTIFICATION
+  }, success_callback, this)
 ```
 
-**Options for `importance`** [Documentation](https://developer.android.com/reference/android/app/NotificationManager#IMPORTANCE_DEFAULT)  
+For setting the channel, use the `channelId` property when scheduling a notification.
+
+**Options for `importance`** [Documentation](https://developer.android.com/reference/android/app/NotificationChannel#NotificationChannel(java.lang.String,%20java.lang.CharSequence,%20int))  
 0 IMPORTANCE_NONE  
 1 IMPORTANCE_MIN  
 2 IMPORTANCE_LOW  
@@ -566,10 +617,7 @@ cordova.plugins.notification.local.createChannel({
 12: USAGE_ASSISTANCE_NAVIGATION_GUIDANCE  
 13: USAGE_ASSISTANCE_SONIFICATION  
 14: USAGE_GAME  
-16: USAGE_ASSISTANT  
-
-Then use the `channelId` value as the `channel` when scheduling a notification. It is not possible to programmatically update a channel once it has been created. 
-
+16: USAGE_ASSISTANT
 
 ## Installation
 
